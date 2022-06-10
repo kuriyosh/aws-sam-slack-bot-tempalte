@@ -1,0 +1,54 @@
+AWSTemplateFormatVersion: "2010-09-09"
+Transform: AWS::Serverless-2016-10-31
+Description: Slack bot template
+
+Parameters:
+  SlackSigningSecret:
+    Type: String
+
+Globals:
+  Function:
+    Timeout: 3
+    Runtime: nodejs14.x
+
+Resources:
+  RootFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      CodeUri: src/root/
+      Handler: index.lambdaHandler
+      Layers:
+        - !Ref SlackBotUtilLayer
+      Policies:
+        - LambdaInvokePolicy:
+            FunctionName: !Ref EchoFunction
+      Environment:
+        Variables:
+          ECHO_FUNCTION_NAME: !Ref EchoFunction
+          SIGNINGS_SECRET: !Ref SlackSigningSecret
+      Events:
+        Echo:
+          Type: Api
+          Properties:
+            Path: /echo
+            Method: post
+
+  EchoFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      CodeUri: src/echo
+      Handler: index.lambdaHandler
+      Layers:
+        - !Ref SlackBotUtilLayer
+
+  SlackBotUtilLayer:
+    Type: AWS::Serverless::LayerVersion
+    Properties:
+      ContentUri: src/layers/slackbot-layer
+    Metadata:
+      BuildMethod: nodejs14.x
+
+Outputs:
+  ApiEndpoint:
+    Description: "Set this endpoint as Slack slash command endpoint"
+    Value: !Sub "https://${ServerlessRestApi}.execute-api.${AWS::Region}.amazonaws.com/Prod/"

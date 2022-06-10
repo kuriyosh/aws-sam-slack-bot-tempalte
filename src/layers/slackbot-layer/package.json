@@ -1,0 +1,7 @@
+{
+  "name": "slackbot-utils",
+  "version": "0.0.0",
+  "dependencies": {
+    "slackbot-utils": "file:slackbot-utils"
+  }
+}
